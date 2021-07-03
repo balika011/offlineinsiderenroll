@@ -23,7 +23,7 @@ pause
 goto :EOF
 
 :START_SCRIPT
-set "scriptver=1.1.0"
+set "scriptver=1.2.0"
 set "FlightSigningEnabled=0"
 bcdedit /enum {current} | findstr /I /R /C:"^flightsigning *Yes$" >NUL 2>&1
 IF %ERRORLEVEL% EQU 0 set "FlightSigningEnabled=1"
@@ -36,6 +36,7 @@ echo.
 echo R - Enroll to Release Preview ring
 echo S - Enroll to Insider Slow ring
 echo F - Enroll to Insider Fast ring
+echo E - Enroll to External Dev ring
 echo.
 echo X - Stop receiving Insider Preview builds
 echo Q - Quit without making any changes
@@ -45,6 +46,7 @@ echo.
 if /I "[%choice%]"=="[r]" goto :ENROLL_RP
 if /I "[%choice%]"=="[s]" goto :ENROLL_SLOW
 if /I "[%choice%]"=="[f]" goto :ENROLL_FAST
+if /I "[%choice%]"=="[e]" goto :ENROLL_EXTERNAL
 if /I "[%choice%]"=="[x]" goto :STOP_INSIDER
 if /I "[%choice%]"=="[q]" goto :EOF
 goto :CHOICE_MENU
@@ -54,6 +56,7 @@ set "SLS=RingPreview"
 set "Ring=RP"
 set "Content=Current"
 set "FancyRing=Release Preview"
+set "Branch=external"
 goto :ENROLL
 
 :ENROLL_SLOW
@@ -61,6 +64,7 @@ set "SLS=RingInsiderSlow"
 set "Ring=WIS"
 set "Content=Active"
 set "FancyRing=Windows Insider Slow"
+set "Branch=external"
 goto :ENROLL
 
 :ENROLL_FAST
@@ -68,6 +72,15 @@ set "SLS=RingInsiderFast"
 set "Ring=WIF"
 set "Content=Active"
 set "FancyRing=Windows Insider Fast"
+set "Branch=external"
+goto :ENROLL
+
+:ENROLL_EXTERNAL
+set "SLS=RingExternal"
+set "Ring=External"
+set "Content=Mainline"
+set "FancyRing=Windows External Dev"
+set "Branch=Dev"
 goto :ENROLL
 
 :RESET_INSIDER_CONFIG
@@ -88,7 +101,7 @@ reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /t
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /t REG_DWORD /v IsBuildFlightingEnabled /d 1 /f >NUL 2>&1
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /t REG_DWORD /v TestFlags /d 32 /f >NUL 2>&1
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /t REG_SZ /v ContentType /d "%Content%" /f >NUL 2>&1
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /t REG_SZ /v BranchName /d "external" /f >NUL 2>&1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /t REG_SZ /v BranchName /d "%Branch%" /f >NUL 2>&1
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /t REG_SZ /v Ring /d "%Ring%" /f >NUL 2>&1
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Strings" /t REG_SZ /v StickyXaml /d "<StackPanel xmlns="^""http://schemas.microsoft.com/winfx/2006/xaml/presentation"^""><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"">This device has been enrolled to the Windows Insider program using OfflineInsiderEnroll v%scriptver%. If you want to change settings of the enrollment or stop receiving Insider Preview builds, please use the script. <Hyperlink NavigateUri="^""https://github.com/whatever127/offlineinsiderenroll/blob/master/readme.md"^"" TextDecorations="^""None"^"">Learn more</Hyperlink></TextBlock><TextBlock Text="^""Applied configuration"^"" Margin="^""0,20,0,10"^"" Style="^""{StaticResource SubtitleTextBlockStyle}"^"" /><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"" Margin="^""0,0,0,5"^""><Run FontFamily="^""Segoe MDL2 Assets"^"">&#xECA7;</Run> <Span FontWeight="^""SemiBold"^"">%FancyRing%</Span></TextBlock><TextBlock Text="^""Ring: %Ring%"^"" Style="^""{StaticResource BodyTextBlockStyle }"^"" /><TextBlock Text="^""Content: %Content%"^"" Style="^""{StaticResource BodyTextBlockStyle }"^"" /><TextBlock Text="^""Telemetry settings notice"^"" Margin="^""0,20,0,10"^"" Style="^""{StaticResource SubtitleTextBlockStyle}"^"" /><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"">Windows Insider Program requires your diagnostic data collection settings to be set to <Span FontWeight="^""SemiBold"^"">Full</Span>. You can verify or modify your current settings in <Span FontWeight="^""SemiBold"^"">Diagnostics &amp; feedback</Span>.</TextBlock><Button Command="^""{StaticResource ActivateUriCommand}"^"" CommandParameter="^""ms-settings:privacy-feedback"^"" Margin="^""0,10,0,0"^""><TextBlock Margin="^""5,0,5,0"^"">Open Diagnostics &amp; feedback</TextBlock></Button></StackPanel>" /f >NUL 2>&1
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /t REG_DWORD /v UIHiddenElements /d 65535 /f >NUL 2>&1
